@@ -1,7 +1,7 @@
 import calendar
 import pandas as pd
 import streamlit as st
-from bokeh.models import ColumnDataSource, Select, Slider
+from bokeh.models import ColumnDataSource
 from bokeh.palettes import Category20
 from bokeh.plotting import figure
 
@@ -31,29 +31,27 @@ def main():
     years = sorted(data['Date'].dt.year.unique().tolist())
     months = sorted(months, key=lambda x: list(calendar.month_name).index(x))
 
-    # Membuat plot
-    plot = figure(x_axis_type="datetime", title="Grafik Seluruh Suhu Rata-rata Harian dalam satuan Fahrenheit di kota Austin dari Tahun 2013-2017", width=1200, height=600)
+    # Tampilan slider dan select
+    col1, col2 = st.columns(2)
+    with col1:
+        selected_year = st.slider("Tahun", min_value=min(years), max_value=max(years), value=min(years), step=1)
+    with col2:
+        selected_month = st.selectbox("Bulan", months, index=0)
 
-    # Menampilkan plot kosong
-    plot.line([], [], line_width=2)
-
-    # Membuat slider untuk tahun
-    selected_year = st.sidebar.slider("Tahun", min_value=min(years), max_value=max(years), value=min(years), step=1)
-
-    # Membuat dropdown menu untuk bulan
-    selected_month = st.sidebar.selectbox("Bulan", months, index=0)
-
-    # Fungsi untuk memperbarui data yang ditampilkan berdasarkan slider dan dropdown menu
+    # Fungsi untuk memperbarui data yang ditampilkan berdasarkan slider dan select
     filtered_data = filter_data(data, selected_year, selected_month)
 
+    # Membuat plot
+    plot = figure(x_axis_type="datetime", title="Grafik Suhu Rata-rata Harian", width=800, height=400)
+    
     if filtered_data.empty:
-        # Jika data kosong, menampilkan tulisan "Data tidak tersedia"
+        # Jika data kosong, menampilkan pesan "Data tidak tersedia"
         plot.title.text = "Data tidak tersedia"
     else:
         # Jika data tersedia, menampilkan data yang difilter
         source = ColumnDataSource(filtered_data)
         plot.line('Date', 'TempAvgF', source=source, line_width=2)
-        plot.title.text = "Grafik Suhu Rata-rata Harian dalam satuan Fahrenheit di kota Austin"
+        plot.title.text = "Grafik Suhu Rata-rata Harian"
 
     # Menampilkan plot menggunakan Streamlit
     st.bokeh_chart(plot)
